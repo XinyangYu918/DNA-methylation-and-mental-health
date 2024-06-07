@@ -4,7 +4,7 @@ options(stringsAsFactors = FALSE)
 allowWGCNAThreads()
 
 # Load data
-datExpr0 <- readRDS("Resid_14_for_WGCNA.rds") # Residuals of methylation data, regressed out for recruitment sites
+datExpr0 <- readRDS("Resid_14_for_WGCNA.rds") # Residuals of methylation data, regressed out for recruitment sites and waves (hybridisation dates)
 
 # Identify bad samples
 sampleTree = hclust(dist(datExpr0), method = "average");
