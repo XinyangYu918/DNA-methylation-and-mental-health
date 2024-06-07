@@ -11,7 +11,7 @@ sampleTree = hclust(dist(datExpr0), method = "average");
 #save(sampleTree, file = "./sampleTree for sample at age 14.rda")
 
 # Plot the sample tree
-sizeGrWindow(12,9)
+sizeGrWindow(12, 9)
 pdf(file = "sampleClustering.pdf", width = 12, height = 9);
 par(cex = 0.6);
 par(mar = c(0, 4, 2, 0))
