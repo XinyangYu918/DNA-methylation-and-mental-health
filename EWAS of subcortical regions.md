@@ -37,22 +37,22 @@ For your cohort that has both patients and healthy controls, you should include 
 library(minfi)
 # Preparing files
 # Provide cohort name
-cohort = "IMAGEN" #change for the name of your cohort
+cohort = "IMAGEN";
 
 # Probe quality check
-load("./Quan-norm.rda")
-load("./RGset.rda")
+load("./Quan-norm.rda");
+load("./RGset.rda");
 
 # Add SNP info to the data 
-objectWithSNPinfo <- addSnpInfo(object)
+objectWithSNPinfo <- addSnpInfo(object);
 
 # Drop probes that contain either an SNP at the CpG interrogation or at the single nucleotide extension
 objectSNPQCed <- dropLociWithSnps(objectWithSNPinfo, snps=c("SBE", "CpG", "Probe"), maf=0.05)
 
-detP <- detectionP(RGset)
-Match1 <- match(colnames(objectSNPQCed),colnames(detP))
-Match2 <- match(rownames(objectSNPQCed),rownames(detP))
-detPSNPQCed <- detP[Match2[!is.na(Match2)],Match1[!is.na(Match1)]]
+detP <- detectionP(RGset);
+Match1 <- match(colnames(objectSNPQCed),colnames(detP));
+Match2 <- match(rownames(objectSNPQCed),rownames(detP));
+detPSNPQCed <- detP[Match2[!is.na(Match2)],Match1[!is.na(Match1)]];
 rm(detP); rm(Match1); rm(Match2);
 
 failed <- detPSNPQCed >0.01
