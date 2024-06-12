@@ -33,54 +33,54 @@ For your cohort that has both patients and healthy controls, you should include 
 *Note 3: If population stratification is of reasonable concern, the self-reported ethnicity information should be included in the covariates file, i.e. as dummy variables. As an alternative, the first 4 MDS of genetic data can also be included. 
  
 
-#### The following codes are used to perform QC and run EWAS analysis with subcortical volumes ####
-library(minfi)
-# Preparing files
-# Provide cohort name
-cohort = "IMAGEN";
+#### The following codes are used to perform QC and run EWAS analysis with subcortical volumes ####  
+library(minfi)  
+# Preparing files  
+# Provide cohort name  
+cohort = "IMAGEN"  
 
-# Probe quality check
-load("./Quan-norm.rda");
-load("./RGset.rda");
+# Probe quality check  
+load("./Quan-norm.rda")  
+load("./RGset.rda")  
 
-# Add SNP info to the data 
-objectWithSNPinfo <- addSnpInfo(object);
+# Add SNP info to the data   
+objectWithSNPinfo <- addSnpInfo(object)  
 
-# Drop probes that contain either an SNP at the CpG interrogation or at the single nucleotide extension
-objectSNPQCed <- dropLociWithSnps(objectWithSNPinfo, snps=c("SBE", "CpG", "Probe"), maf=0.05)
+# Drop probes that contain either an SNP at the CpG interrogation or at the single nucleotide extension  
+objectSNPQCed <- dropLociWithSnps(objectWithSNPinfo, snps=c("SBE", "CpG", "Probe"), maf=0.05)  
 
-detP <- detectionP(RGset);
-Match1 <- match(colnames(objectSNPQCed),colnames(detP));
-Match2 <- match(rownames(objectSNPQCed),rownames(detP));
-detPSNPQCed <- detP[Match2[!is.na(Match2)],Match1[!is.na(Match1)]];
-rm(detP); rm(Match1); rm(Match2);
+detP <- detectionP(RGset)  
+Match1 <- match(colnames(objectSNPQCed),colnames(detP))  
+Match2 <- match(rownames(objectSNPQCed),rownames(detP))  
+detPSNPQCed <- detP[Match2[!is.na(Match2)],Match1[!is.na(Match1)]]  
+rm(detP,Match1,Match2)  
 
-failed <- detPSNPQCed >0.01
-beta <- getBeta(objectSNPQCed)
+failed <- detPSNPQCed > 0.01  
+beta <- getBeta(objectSNPQCed)  
 
-# Drop probes that failed quality control via the detection p-value in greater than 20% of samples
-failedCG02 <- rowMeans(failed)>0.2
+# Drop probes that failed quality control via the detection p-value in greater than 20% of samples  
+failedCG02 <- rowMeans(failed)>0.2  
 
-# Get the list of non-variable CpG sites i.e. those where beta values for all samples are ≤20% or ≥80%
-ProbeInvar <- (rowSums(beta<=0.2)==ncol(beta))|(rowSums(beta>=0.8)==ncol(beta)) 
-ListInvarProbe <- rownames(beta)[which(ProbeInvar)] 
+# Get the list of non-variable CpG sites i.e. those where beta values for all samples are ≤20% or ≥80%  
+ProbeInvar <- (rowSums(beta<=0.2)==ncol(beta))|(rowSums(beta>=0.8)==ncol(beta))   
+ListInvarProbe <- rownames(beta)[which(ProbeInvar)]   
 
-# Remove sex chromosome probes
-keepIndex=!seqnames(objectSNPQCed)%in%c("chrX","chrY")
-rm(objectSNPQCed)
-keepIndex <- keepIndex&(!failedCG02)
-rm(failedCG02)
-beta[failed] <- NA
-rm(failed)
-betaQC <- beta[which(keepIndex),]
-rm(beta, keepIndex)
+# Remove sex chromosome probes  
+keepIndex=!seqnames(objectSNPQCed)%in%c("chrX","chrY")  
+rm(objectSNPQCed)  
+keepIndex <- keepIndex&(!failedCG02)  
+rm(failedCG02)  
+beta[failed] <- NA  
+rm(failed)  
+betaQC <- beta[which(keepIndex),]  
+rm(beta, keepIndex)  
 
-# Reformat beta value to match the format for EWAS analysis
-Methy <- as.data.frame(t(betaQC))
-Methy$Subject <- colnames(betaQC)
-rm(betaQC)
-Methy <- Methy[,c(ncol(Methy),1:(ncol(Methy)-1))]
-MethyName <- colnames(Methy)[-c(1)]
+# Reformat beta value to match the format for EWAS analysis  
+Methy <- as.data.frame(t(betaQC))  
+Methy$Subject <- colnames(betaQC)  
+rm(betaQC)  
+Methy <- Methy[,c(ncol(Methy),1:(ncol(Methy)-1))]  
+MethyName <- colnames(Methy)[-c(1)]  
 
 # Load and format covariates
 load("./fast_svd.rda")
