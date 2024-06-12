@@ -27,7 +27,9 @@ If your cohort has only healthy controls, only patients and twin study, this fil
 For your cohort that has both patients and healthy controls, you should include a covariate called "AffectionStatus", coded as a binary indicator variable where Controls = 0 and Patients = 1. The final file, saved as SubCortCovs.csv, should have the following columns at a minimum: SubjID, Age, Sex, AffectionStatus. Additional columns for dummy covariates (i.e., a covariate to control for different acquisition sites, if applicable) are optional. Note we will have three outputs for the whole sample, the case individuals only and the control individuals only.
 
 *Note 1: Please make sure that missing data has been recorded as NA in these files!! Self-coded missing data should be transformed to NA through Data== -9 <- NA, where Data should be replaced with the name of your data file in question and -9 should be replaced with your self-coded missing data value. 
+
 *Note 2: Sex must be specified as follows: (Males=1, Females=2), and "FID" and "IID" should be named exactly the same in all files.
+
 *Note 3: If population stratification is of reasonable concern, the self-reported ethnicity information should be included in the covariates file, i.e. as dummy variables. As an alternative, the first 4 MDS of genetic data can also be included. 
  
 
