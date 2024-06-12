@@ -66,14 +66,11 @@ ProbeInvar <- (rowSums(beta<=0.2)==ncol(beta))|(rowSums(beta>=0.8)==ncol(beta))
 ListInvarProbe <- rownames(beta)[which(ProbeInvar)]   
 
 # Remove sex chromosome probes  
-keepIndex=!seqnames(objectSNPQCed)%in%c("chrX","chrY")  
-rm(objectSNPQCed)  
+keepIndex=!seqnames(objectSNPQCed)%in%c("chrX","chrY")   
 keepIndex <- keepIndex&(!failedCG02)  
-rm(failedCG02)  
 beta[failed] <- NA  
-rm(failed)  
 betaQC <- beta[which(keepIndex),]  
-rm(beta, keepIndex)  
+rm(objectSNPQCed, failedCG02, failed, beta, keepIndex)  
 
 # Reformat beta value to match the format for EWAS analysis  
 Methy <- as.data.frame(t(betaQC))  
@@ -82,138 +79,139 @@ rm(betaQC)
 Methy <- Methy[,c(ncol(Methy),1:(ncol(Methy)-1))]  
 MethyName <- colnames(Methy)[-c(1)]  
 
-# Load and format covariates
-load("./fast_svd.rda")
-PC_Beta <- as.data.frame(ss$v[,1:4])
-PC_Beta$Subject <- Methy$Subject
+# Load and format covariates  
+load("./fast_svd.rda")  
+PC_Beta <- as.data.frame(ss$v[,1:4])  
+PC_Beta$Subject <- Methy$Subject  
 
-load("./cellcount.rda")
-tmp <- prcomp(cellcount)
-pc_cell <- as.data.frame(tmp$x[,1:2])
-pc_cell$Subject <- rownames(pc_cell)
+load("./cellcount.rda")  
+tmp <- prcomp(cellcount)  
+pc_cell <- as.data.frame(tmp$x[,1:2])  
+pc_cell$Subject <- rownames(pc_cell)  
 
-# Load and format Subcortical volumes
-Raw_Struc <- read.csv("./LandRvolumes.csv", header=T) 
-Struc <- matrix(data=0, ncol=8, nrow=nrow(Raw_Struc)) 
-colnames(Struc) <- c("Subject","Mthal", "Mcaud", "Mput", "Mpal", "Mhippo", "Mamyg", "Maccumb")
-Struc <- as.data.frame(Struc) 
-Struc$Subject = Raw_Struc$SubjID 
-Struc$Mthal <- rowMeans(Raw_Struc[,c("Lthal","Rthal")])
-Struc$Mcaud <- rowMeans(Raw_Struc[,c("Lcaud","Rcaud")])
-Struc$Mput <- rowMeans(Raw_Struc[,c("Lput","Rput")])
-Struc$Mpal <- rowMeans(Raw_Struc[,c("Lpal","Rpal")])
-Struc$Mhippo <- rowMeans(Raw_Struc[,c("Lhippo","Rhippo")])
-Struc$Mamyg <- rowMeans(Raw_Struc[,c("Lamyg","Ramyg")])
-Struc$Maccumb <- rowMeans(Raw_Struc[,c("Laccumb","Raccumb")])
-StrucName <- colnames(Struc)[-1]
-ICV <- Raw_Struc[,c(1,ncol(Raw_Struc))] 
-colnames(ICV)[1] <- "Subject" 
-rm(Raw_Struc)
+# Load and format Subcortical volumes  
+Raw_Struc <- read.csv("./LandRvolumes.csv", header=T)   
+Struc <- matrix(data=0, ncol=8, nrow=nrow(Raw_Struc))   
+colnames(Struc) <- c("Subject","Mthal", "Mcaud", "Mput", "Mpal", "Mhippo", "Mamyg", "Maccumb")  
+Struc <- as.data.frame(Struc)   
+Struc$Subject = Raw_Struc$SubjID   
+Struc$Mthal <- rowMeans(Raw_Struc[,c("Lthal","Rthal")])  
+Struc$Mcaud <- rowMeans(Raw_Struc[,c("Lcaud","Rcaud")])  
+Struc$Mput <- rowMeans(Raw_Struc[,c("Lput","Rput")])  
+Struc$Mpal <- rowMeans(Raw_Struc[,c("Lpal","Rpal")])  
+Struc$Mhippo <- rowMeans(Raw_Struc[,c("Lhippo","Rhippo")])  
+Struc$Mamyg <- rowMeans(Raw_Struc[,c("Lamyg","Ramyg")])  
+Struc$Maccumb <- rowMeans(Raw_Struc[,c("Laccumb","Raccumb")])  
+StrucName <- colnames(Struc)[-1]  
+ICV <- Raw_Struc[,c(1,ncol(Raw_Struc))]   
+colnames(ICV)[1] <- "Subject"   
+rm(Raw_Struc)  
 
-# Read and combine Covariates Data
-Raw_Cov <- read.csv("./SubCortCovs.csv", header=T) 
-Raw_Cov<-Raw_Cov[,-c(1)] 
-Raw_Cov$Age_Square <- (Raw_Cov$Age)^2 
-colnames(Raw_Cov)[1] <- "Subject"
+# Read and combine Covariates Data  
+Raw_Cov <- read.csv("./SubCortCovs.csv", header=T)   
+Raw_Cov<-Raw_Cov[,-c(1)]   
+Raw_Cov$Age_Square <- (Raw_Cov$Age)^2   
+colnames(Raw_Cov)[1] <- "Subject"  
 
-Cov <- merge(Raw_Cov, PC_Beta, by="Subject", all=F) 
-Cov <- merge(Cov, pc_cell, by="Subject", all=F) 
-Cov <- merge(Cov, ICV, by="Subject", all=F) 
-CovName <- colnames(Cov)[-c(1)] 
+Cov <- merge(Raw_Cov, PC_Beta, by="Subject", all=F)   
+Cov <- merge(Cov, pc_cell, by="Subject", all=F)   
+Cov <- merge(Cov, ICV, by="Subject", all=F)   
+CovName <- colnames(Cov)[-c(1)]   
 
-# Save age information for further analysis
-AgeInformation <- data.frame(min(Cov$Age),max(Cov$Age),mean(Cov$Age))
-names(AgeInformation) <- c("MinAge", "MaxAge", "MeanAge")
+# Save age information for further analysis  
+AgeInformation <- data.frame(min(Cov$Age),max(Cov$Age),mean(Cov$Age))  
+names(AgeInformation) <- c("MinAge", "MaxAge", "MeanAge")  
 
-# Merge files for EWAS, make sure the inputs are in the same order for participants
-Data <- merge(Cov, Struc, by="Subject", all=F)
-Match <- match(Methy$Subject, Data$Subject)
+# Merge files for EWAS, make sure the inputs are in the same order for participants  
+Data <- merge(Cov, Struc, by="Subject", all=F)  
+Match <- match(Methy$Subject, Data$Subject)  
 
-Cov <- Data[Match[!is.na(Match)],2:(length(CovName)+1)]
-Struc <- Data[Match[!is.na(Match)],-c(1:(length(CovName)+1))]
-Methy <- Methy[!is.na(Match),-c(1)]
+Cov <- Data[Match[!is.na(Match)],2:(length(CovName)+1)]  
+Struc <- Data[Match[!is.na(Match)],-c(1:(length(CovName)+1))]  
+Methy <- Methy[!is.na(Match),-c(1)]  
 
-# EWAS analysis: linear regression between DNA methylation and subcortical volumes
-Num_Methy <- ncol(Methy) 
-Num_Cov <- ncol(Cov)
-Num_Struc <- ncol(Struc)
+# EWAS analysis: linear regression between DNA methylation and subcortical volumes  
+Num_Methy <- ncol(Methy)   
+Num_Cov <- ncol(Cov)  
+Num_Struc <- ncol(Struc)  
 
-# Prepare the output files 
-Origin_Beta <- matrix(data= NA, nrow=Num_Methy, ncol= Num_Struc, byrow=F, dimnames=NULL)
-colnames(Origin_Beta) <- colnames(Struc)
-rownames(Origin_Beta) <- colnames(Methy)
-Origin_SE <- matrix(data= NA, nrow=Num_Methy, ncol= Num_Struc, byrow=F, dimnames=NULL)
-colnames(Origin_SE) <- colnames(Struc)
-rownames(Origin_SE) <- colnames(Methy)
-Origin_P <- matrix(data= NA, nrow=Num_Methy, ncol= Num_Struc, byrow=F, dimnames=NULL)
-colnames(Origin_P) <- colnames(Struc)
-rownames(Origin_P) <- colnames(Methy)
-Origin_N <- matrix(data=NA,nrow=Num_Methy,ncol=Num_Struc,byrow=F,dimnames=NULL)
-colnames(Origin_N) <- colnames(Struc)
-rownames(Origin_N) <- colnames(Methy)
+# Prepare the output files   
+Origin_Beta <- matrix(data= NA, nrow=Num_Methy, ncol= Num_Struc, byrow=F, dimnames=NULL)  
+colnames(Origin_Beta) <- colnames(Struc)  
+rownames(Origin_Beta) <- colnames(Methy)  
+Origin_SE <- matrix(data= NA, nrow=Num_Methy, ncol= Num_Struc, byrow=F, dimnames=NULL)  
+colnames(Origin_SE) <- colnames(Struc)  
+rownames(Origin_SE) <- colnames(Methy)  
+Origin_P <- matrix(data= NA, nrow=Num_Methy, ncol= Num_Struc, byrow=F, dimnames=NULL)  
+colnames(Origin_P) <- colnames(Struc)  
+rownames(Origin_P) <- colnames(Methy)  
+Origin_N <- matrix(data=NA,nrow=Num_Methy,ncol=Num_Struc,byrow=F,dimnames=NULL)  
+colnames(Origin_N) <- colnames(Struc)  
+rownames(Origin_N) <- colnames(Methy)  
 
-# The following codes should be run by all cohorts
-Covar <- matrix(unlist(Cov), ncol=ncol(Cov), byrow=F)
-for (i in 1:Num_Methy) {
-  for (j in 1:Num_Struc ) {
-    Out <- summary(lm(Methy[,i] ~ Covar + Struc[,j]))
-    Origin_Beta[i,j] <- Out$coefficients[nrow(Out$coefficients),1]
-    Origin_SE[i,j] <- Out$coefficients[nrow(Out$coefficients),2]
-    Origin_P[i,j] <- Out$coefficients[nrow(Out$coefficients),4]
-    Origin_N[i,j] <- Out$df[1]+Out$df[2]
-  }
-}
-# Save model description
-model <- paste0("Methy[,i] ~ ",paste0(names(Cov),collapse = "+"),"+Struc [,j]")
+# The following codes should be run by all cohorts  
+Covar <- matrix(unlist(Cov), ncol=ncol(Cov), byrow=F)  
+for (i in 1:Num_Methy) {  
+  for (j in 1:Num_Struc ) {  
+    Out <- summary(lm(Methy[,i] ~ Covar + Struc[,j]))  
+    Origin_Beta[i,j] <- Out$coefficients[nrow(Out$coefficients),1]  
+    Origin_SE[i,j] <- Out$coefficients[nrow(Out$coefficients),2]  
+    Origin_P[i,j] <- Out$coefficients[nrow(Out$coefficients),4]  
+    Origin_N[i,j] <- Out$df[1]+Out$df[2]  
+  }  
+}  
 
-# Save output file
-save(Origin_Beta, Origin_SE, Origin_P,model,Origin_N,ListInvarProbe, AgeInformation, file = paste("./Output_of_",cohort, "_Methylation_and_All_Subcortical_Structure.RData",sep=""), compress = T)
+# Save model description  
+model <- paste0("Methy[,i] ~ ",paste0(names(Cov),collapse = "+"),"+Struc [,j]")  
+
+# Save output file  
+save(Origin_Beta, Origin_SE, Origin_P,model,Origin_N,ListInvarProbe, AgeInformation, file = paste("./Output_of_",cohort, "_Methylation_and_All_Subcortical_Structure.RData",sep=""), compress = T)  
 
 
-# The following codes should be run by case-control cohorts
-# Prepare the output files 
-Origin_Beta <- matrix(data= NA, nrow=Num_Methy, ncol= Num_Struc, byrow=F, dimnames=NULL)
-colnames(Origin_Beta) <- colnames(Struc)
-rownames(Origin_Beta) <- colnames(Methy)
-Origin_SE <- matrix(data= NA, nrow=Num_Methy, ncol= Num_Struc, byrow=F, dimnames=NULL)
-colnames(Origin_SE) <- colnames(Struc)
-rownames(Origin_SE) <- colnames(Methy)
-Origin_P <- matrix(data= NA, nrow=Num_Methy, ncol= Num_Struc, byrow=F, dimnames=NULL)
-colnames(Origin_P) <- colnames(Struc)
-rownames(Origin_P) <- colnames(Methy)
-Origin_N <- matrix(data=NA,nrow=Num_Methy,ncol=Num_Struc,byrow=F,dimnames=NULL)
-colnames(Origin_N) <- colnames(Struc)
-rownames(Origin_N) <- colnames(Methy)
+# The following codes should be run by case-control cohorts  
+# Prepare the output files     
+Origin_Beta <- matrix(data= NA, nrow=Num_Methy, ncol= Num_Struc, byrow=F, dimnames=NULL)  
+colnames(Origin_Beta) <- colnames(Struc)  
+rownames(Origin_Beta) <- colnames(Methy)  
+Origin_SE <- matrix(data= NA, nrow=Num_Methy, ncol= Num_Struc, byrow=F, dimnames=NULL)  
+colnames(Origin_SE) <- colnames(Struc)  
+rownames(Origin_SE) <- colnames(Methy)  
+Origin_P <- matrix(data= NA, nrow=Num_Methy, ncol= Num_Struc, byrow=F, dimnames=NULL)  
+colnames(Origin_P) <- colnames(Struc)  
+rownames(Origin_P) <- colnames(Methy)  
+Origin_N <- matrix(data=NA,nrow=Num_Methy,ncol=Num_Struc,byrow=F,dimnames=NULL)  
+colnames(Origin_N) <- colnames(Struc)  
+rownames(Origin_N) <- colnames(Methy)  
 
-Affect <- colnames(Cov)=="AffectionStatus"
+Affect <- colnames(Cov)=="AffectionStatus"  
 
-# Save age information for cases and controls separately
-AgeInformation$CaseMinAge <- min(Cov$Age[Cov$AffectionStatus == 1])
-AgeInformation$CaseMaxAge <- max(Cov$Age[Cov$AffectionStatus == 1])
-AgeInformation$CaseMeanAge <- mean(Cov$Age[Cov$AffectionStatus == 1])
-AgeInformation$ControlMinAge <- min(Cov$Age[Cov$AffectionStatus == 0])
-AgeInformation$ControlMaxAge <- max(Cov$Age[Cov$AffectionStatus == 0])
-AgeInformation$ControlMeanAge <- mean(Cov$Age[Cov$AffectionStatus == 0])
+# Save age information for cases and controls separately  
+AgeInformation$CaseMinAge <- min(Cov$Age[Cov$AffectionStatus == 1])  
+AgeInformation$CaseMaxAge <- max(Cov$Age[Cov$AffectionStatus == 1])  
+AgeInformation$CaseMeanAge <- mean(Cov$Age[Cov$AffectionStatus == 1])  
+AgeInformation$ControlMinAge <- min(Cov$Age[Cov$AffectionStatus == 0])  
+AgeInformation$ControlMaxAge <- max(Cov$Age[Cov$AffectionStatus == 0])  
+AgeInformation$ControlMeanAge <- mean(Cov$Age[Cov$AffectionStatus == 0])  
 
-if (sum(Affect)==1) 
-{
-Status <- c("Case", "Control")
-for (k in 1:2) {
-Ind <- Covar[,Affect]==(2-k) 
-for (i in 1:Num_Methy) {
-for (j in 1:Num_Struc) {
-Out <- summary(lm(Methy[Ind,i]~Covar[Ind,!Affect]+Struc[Ind,j]))         
-Origin_Beta[i,j] <- Out$coefficients[nrow(Out$coefficients),1]
-Origin_SE[i,j] <- Out$coefficients[nrow(Out$coefficients),2]
-Origin_P[i,j] <- Out$coefficients[nrow(Out$coefficients),4]
-Origin_N[i,j] <- Out$df[1]+Out$df[2]
-}
-}
+if (sum(Affect)==1)   
+{  
+Status <- c("Case", "Control")  
+for (k in 1:2) {  
+Ind <- Covar[,Affect]==(2-k)   
+for (i in 1:Num_Methy) {  
+for (j in 1:Num_Struc) {  
+Out <- summary(lm(Methy[Ind,i]~Covar[Ind,!Affect]+Struc[Ind,j]))           
+Origin_Beta[i,j] <- Out$coefficients[nrow(Out$coefficients),1]  
+Origin_SE[i,j] <- Out$coefficients[nrow(Out$coefficients),2]  
+Origin_P[i,j] <- Out$coefficients[nrow(Out$coefficients),4]  
+Origin_N[i,j] <- Out$df[1]+Out$df[2]  
+}  
+}  
 
-# Save model description
-model <- paste0("Methy[Ind,i] ~ ",paste0(names(Cov)[!Affect],collapse = "+"),"+ Struc [Ind,j]")
+# Save model description  
+model <- paste0("Methy[Ind,i] ~ ",paste0(names(Cov)[!Affect],collapse = "+"),"+ Struc [Ind,j]")  
 
-# Save output file
-save(Origin_Beta, Origin_SE, Origin_P, Origin_N, model,ListInvarProbe, AgeInformation, file = paste("./Output_of_",cohort,"_",Status[k], "Individuals_Methylation_and_All_Subcortical_Structure.RData", sep=""), compress = T)
-    }
-}
+# Save output file  
+save(Origin_Beta, Origin_SE, Origin_P, Origin_N, model,ListInvarProbe, AgeInformation, file = paste("./Output_of_",cohort,"_",Status[k], "Individuals_Methylation_and_All_Subcortical_Structure.RData", sep=""), compress = T)  
+    }  
+}  
